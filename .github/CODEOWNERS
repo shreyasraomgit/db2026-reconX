@@ -1,0 +1,8 @@
+# Global default owner
+*       @shreyasraomgit
+
+# Path-specific owners for workshop components
+/backend/   @shreyam168
+/frontend/  @shreyashwini
+/db/        @pritinarlwar
+/architecture/ @shravanimali
