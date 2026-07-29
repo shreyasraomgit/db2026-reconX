@@ -1,0 +1,6 @@
+# Maven reactor build output (parent and each Day 4 backend module)
+/backend/target/
+/backend/*/target/
+
+# Local Spring Boot verification logs
+/backend/api/day4-dev-test*.log

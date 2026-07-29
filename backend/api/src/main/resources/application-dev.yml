@@ -1,0 +1,35 @@
+spring:
+
+  datasource:
+    url: jdbc:h2:mem:reconx;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+
+    hibernate:
+      ddl-auto: validate
+
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+reconx:
+  security:
+    jwt:
+      secret: dev-only-secret-key-please-change-this-123456789
+      expiration-minutes: 60
+      issuer: reconx
+
+
+logging:
+
+  level:
+    com.dbtraining.reconx: DEBUG
+    org.hibernate.SQL: DEBUG
+

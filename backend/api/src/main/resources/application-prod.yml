@@ -1,0 +1,27 @@
+spring:
+
+  datasource:
+
+    url: ${RECONX_DB_URL}
+
+    username: ${RECONX_DB_USER}
+
+    password: ${RECONX_DB_PASSWORD}
+
+
+  jpa:
+
+    database-platform:
+      org.hibernate.dialect.PostgreSQLDialect
+
+    hibernate:
+      ddl-auto: validate
+
+
+logging:
+
+  level:
+
+    root: WARN
+
+    com.dbtraining.reconx: INFO
