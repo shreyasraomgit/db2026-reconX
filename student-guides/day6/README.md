@@ -739,196 +739,196 @@ This is the headline block of the day. You will spend two hours here. Before any
 
 Open `http://localhost:9090/graph` and run a quick sanity check: query `up{job="recon-service"}`. You should see a value of `1`. If it is missing, your Prometheus job target is wrong or the app is not running. Fix that before continuing.
 
-### TICKET-ADV087 — Grafana panel: API request rate by endpoint
+  ### TICKET-ADV087 — Grafana panel: API request rate by endpoint
 
-**Goal:** A time-series panel showing requests-per-second broken out by URI.
+  **Goal:** A time-series panel showing requests-per-second broken out by URI.
 
-**What**
-- A Grafana time-series panel titled "API request rate by endpoint" running `sum by (uri) (rate(http_server_requests_seconds_count[1m]))` with the Y-axis unit set to req/s.
+  **What**
+  - A Grafana time-series panel titled "API request rate by endpoint" running `sum by (uri) (rate(http_server_requests_seconds_count[1m]))` with the Y-axis unit set to req/s.
 
-**Why**
-- This is the first panel an SRE opens during an incident and the one ADV097's load test will visibly spike — getting the `by (uri)` grouping right now avoids the high-cardinality tangle that would otherwise hide the signal.
+  **Why**
+  - This is the first panel an SRE opens during an incident and the one ADV097's load test will visibly spike — getting the `by (uri)` grouping right now avoids the high-cardinality tangle that would otherwise hide the signal.
 
-**Observe**
-- After hitting `/api/v1/trades` and `/api/v1/breaks` a few times, the panel shows one labelled line per URI and no method/status/instance noise.
+  **Observe**
+  - After hitting `/api/v1/trades` and `/api/v1/breaks` a few times, the panel shows one labelled line per URI and no method/status/instance noise.
 
-**Done when:**
-- Panel renders a non-empty time series after you exercise a few endpoints.
-- Each line is labelled with its URI, not a tangle of method/status/instance combinations.
-- The Y-axis unit reads as requests-per-second.
+  **Done when:**
+  - Panel renders a non-empty time series after you exercise a few endpoints.
+  - Each line is labelled with its URI, not a tangle of method/status/instance combinations.
+  - The Y-axis unit reads as requests-per-second.
 
-<details>
-<summary>Hint 1 — gentle direction</summary>
+  <details>
+  <summary>Hint 1 — gentle direction</summary>
 
-The Micrometer-emitted metric you want is the HTTP server counter (it ends in `_count` in Prometheus). To go from a monotonically increasing counter to "requests per second," you need a PromQL function that derives a per-second rate over a sliding window. To collapse the high-cardinality labels (uri, method, status, instance, exception) down to just the dimension you care about, you need an aggregation operator with a `by` clause. Combining those two ideas gives the query.
+  The Micrometer-emitted metric you want is the HTTP server counter (it ends in `_count` in Prometheus). To go from a monotonically increasing counter to "requests per second," you need a PromQL function that derives a per-second rate over a sliding window. To collapse the high-cardinality labels (uri, method, status, instance, exception) down to just the dimension you care about, you need an aggregation operator with a `by` clause. Combining those two ideas gives the query.
 
-</details>
+  </details>
 
-<details>
-<summary>Hint 2 — concrete pointer</summary>
+  <details>
+  <summary>Hint 2 — concrete pointer</summary>
 
-The metric base name is `http_server_requests_seconds`. The counter series Prometheus exposes is `http_server_requests_seconds_count`. The PromQL functions are `rate(series[window])` and `sum(...) by (label)`. Window of `1m` is a reasonable starting choice for a dashboard. The Grafana panel type is "Time series." The unit selector under `Standard options → Unit` includes `reqps` (requests per second). Use `legendFormat` to show only the URI label rather than every label combination.
+  The metric base name is `http_server_requests_seconds`. The counter series Prometheus exposes is `http_server_requests_seconds_count`. The PromQL functions are `rate(series[window])` and `sum(...) by (label)`. Window of `1m` is a reasonable starting choice for a dashboard. The Grafana panel type is "Time series." The unit selector under `Standard options → Unit` includes `reqps` (requests per second). Use `legendFormat` to show only the URI label rather than every label combination.
 
-</details>
+  </details>
 
-<details>
-<summary>Hint 3 — near-solution shape</summary>
+  <details>
+  <summary>Hint 3 — near-solution shape</summary>
 
-PromQL shape: `sum(rate(http_server_requests_seconds_count[1m])) by (uri)`. The order matters — `rate` must wrap the raw counter before `sum` aggregates. Panel: Time series, single target, expr as above, `legendFormat` of `{{uri}}`. Unit: `reqps`. If you see "No data," confirm the Prometheus datasource UID in the Grafana panel matches the provisioned UID (`prometheus-ds` in the canonical setup) and that Prometheus is actually scraping your app — `up{job="recon-service"}` should be 1.
+  PromQL shape: `sum(rate(http_server_requests_seconds_count[1m])) by (uri)`. The order matters — `rate` must wrap the raw counter before `sum` aggregates. Panel: Time series, single target, expr as above, `legendFormat` of `{{uri}}`. Unit: `reqps`. If you see "No data," confirm the Prometheus datasource UID in the Grafana panel matches the provisioned UID (`prometheus-ds` in the canonical setup) and that Prometheus is actually scraping your app — `up{job="recon-service"}` should be 1.
 
-</details>
+  </details>
 
-<details>
-<summary>Hint 4 — step-by-step walkthrough with reference solution</summary>
+  <details>
+  <summary>Hint 4 — step-by-step walkthrough with reference solution</summary>
 
-**Steps:**
+  **Steps:**
 
-1. Open Grafana, click "Add panel" on the ReconX overview dashboard.
-2. Pick panel type "Time series" and the Prometheus datasource.
-3. Paste the PromQL below as the query.
-4. Set `legendFormat` to `{{uri}}` and unit to `reqps`.
-5. Exercise the API (a few GET/POST calls); confirm one line per URI renders.
-6. Save the dashboard JSON to `monitoring/grafana/provisioning/dashboards/reconx-overview.json`.
+  1. Open Grafana, click "Add panel" on the ReconX overview dashboard.
+  2. Pick panel type "Time series" and the Prometheus datasource.
+  3. Paste the PromQL below as the query.
+  4. Set `legendFormat` to `{{uri}}` and unit to `reqps`.
+  5. Exercise the API (a few GET/POST calls); confirm one line per URI renders.
+  6. Save the dashboard JSON to `monitoring/grafana/provisioning/dashboards/reconx-overview.json`.
 
-**Reference solution** — PromQL:
+  **Reference solution** — PromQL:
 
-```promql
-sum(rate(http_server_requests_seconds_count[1m])) by (uri)
-```
+  ```promql
+  sum(rate(http_server_requests_seconds_count[1m])) by (uri)
+  ```
 
-Panel JSON fragment (`monitoring/grafana/provisioning/dashboards/reconx-overview.json` — trainer copy entry):
+  Panel JSON fragment (`monitoring/grafana/provisioning/dashboards/reconx-overview.json` — trainer copy entry):
 
-```json
-{
-  "type": "timeseries",
-  "title": "API request rate by endpoint (TICKET-ADV087)",
-  "datasource": { "type": "prometheus", "uid": "reconx-prometheus" },
-  "targets": [
-    { "expr": "sum(rate(http_server_requests_seconds_count[1m])) by (uri)", "legendFormat": "{{uri}}" }
-  ],
-  "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
-}
-```
+  ```json
+  {
+    "type": "timeseries",
+    "title": "API request rate by endpoint (TICKET-ADV087)",
+    "datasource": { "type": "prometheus", "uid": "reconx-prometheus" },
+    "targets": [
+      { "expr": "sum(rate(http_server_requests_seconds_count[1m])) by (uri)", "legendFormat": "{{uri}}" }
+    ],
+    "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
+  }
+  ```
 
-The provisioned datasource uid is `reconx-prometheus` (see `monitoring/grafana/provisioning/datasources/prometheus.yml`). Set the panel's standard-options unit to `reqps` in the Grafana UI — the trainer-copy JSON keeps panel JSON minimal and relies on the UI for unit selection.
+  The provisioned datasource uid is `reconx-prometheus` (see `monitoring/grafana/provisioning/datasources/prometheus.yml`). Set the panel's standard-options unit to `reqps` in the Grafana UI — the trainer-copy JSON keeps panel JSON minimal and relies on the UI for unit selection.
 
-</details>
+  </details>
 
-**▶ Run the project — verify TICKET-ADV087 end-to-end**
+  **▶ Run the project — verify TICKET-ADV087 end-to-end**
 
-Boot the observability stack and confirm the request-rate panel renders one line per URI.
+  Boot the observability stack and confirm the request-rate panel renders one line per URI.
 
-```bash
-docker compose up -d postgres prometheus grafana
-./mvnw -pl backend spring-boot:run
-# in another terminal — exercise a few endpoints to get non-zero traffic:
-for i in 1 2 3 4 5; do curl -s http://localhost:8080/actuator/health > /dev/null; done
-# open http://localhost:3000  (admin/admin)
-```
+  ```bash
+  docker compose up -d postgres prometheus grafana
+  ./mvnw -pl backend spring-boot:run
+  # in another terminal — exercise a few endpoints to get non-zero traffic:
+  for i in 1 2 3 4 5; do curl -s http://localhost:8080/actuator/health > /dev/null; done
+  # open http://localhost:3000  (admin/admin)
+  ```
 
-**Observe:**
+  **Observe:**
 
-- The "ReconX Overview" dashboard loads and the "API request rate by endpoint" panel renders one line per `uri`.
-- Y-axis unit is `reqps` and the legend reads as a URI (not a `{instance=...,job=...}` blob).
-- If the panel shows "No data," check `up{job="recon-service"}` in Prometheus first — the break is almost always at the scrape, not the panel.
+  - The "ReconX Overview" dashboard loads and the "API request rate by endpoint" panel renders one line per `uri`.
+  - Y-axis unit is `reqps` and the legend reads as a URI (not a `{instance=...,job=...}` blob).
+  - If the panel shows "No data," check `up{job="recon-service"}` in Prometheus first — the break is almost always at the scrape, not the panel.
 
----
+  ---
 
-### TICKET-ADV088 — Grafana panel: API response time P50/P95/P99
+  ### TICKET-ADV088 — Grafana panel: API response time P50/P95/P99
 
-**Goal:** A three-line time-series panel showing median, 95th, and 99th percentile latency for each endpoint.
+  **Goal:** A three-line time-series panel showing median, 95th, and 99th percentile latency for each endpoint.
 
-**What**
-- A Grafana time-series panel with three queries — P50, P95, P99 — each shaped `histogram_quantile(<q>, sum by (le, uri) (rate(http_server_requests_seconds_bucket[5m])))` with the unit set to seconds.
+  **What**
+  - A Grafana time-series panel with three queries — P50, P95, P99 — each shaped `histogram_quantile(<q>, sum by (le, uri) (rate(http_server_requests_seconds_bucket[5m])))` with the unit set to seconds.
 
-**Why**
-- Latency percentiles are the second pane every on-call opens, and the P95 query here is the exact expression the ADV094 alert rule will compare against the 500 ms threshold.
+  **Why**
+  - Latency percentiles are the second pane every on-call opens, and the P95 query here is the exact expression the ADV094 alert rule will compare against the 500 ms threshold.
 
-**Observe**
-- After exercising the API, three labelled lines (P50/P95/P99) render with non-zero values and Grafana auto-scales the axis to ms or us.
+  **Observe**
+  - After exercising the API, three labelled lines (P50/P95/P99) render with non-zero values and Grafana auto-scales the axis to ms or us.
 
-**Done when:**
-- Panel shows three labelled lines: P50, P95, P99.
-- Lines are non-zero after you exercise the API.
-- The axis renders in human-readable time units (ms/µs scale automatically).
+  **Done when:**
+  - Panel shows three labelled lines: P50, P95, P99.
+  - Lines are non-zero after you exercise the API.
+  - The axis renders in human-readable time units (ms/µs scale automatically).
 
-<details>
-<summary>Hint 1 — gentle direction</summary>
+  <details>
+  <summary>Hint 1 — gentle direction</summary>
 
-You cannot compute a percentile from a counter or a rate alone — you need the bucketed histogram data Spring Boot emits automatically for `http_server_requests_seconds`. The PromQL function that interpolates a percentile across bucket boundaries is the histogram quantile function. It requires the `le` bucket-boundary label to be present in the aggregation grouping; if you drop `le` in a `by` clause, the function has nothing to interpolate.
+  You cannot compute a percentile from a counter or a rate alone — you need the bucketed histogram data Spring Boot emits automatically for `http_server_requests_seconds`. The PromQL function that interpolates a percentile across bucket boundaries is the histogram quantile function. It requires the `le` bucket-boundary label to be present in the aggregation grouping; if you drop `le` in a `by` clause, the function has nothing to interpolate.
 
-</details>
+  </details>
 
-<details>
-<summary>Hint 2 — concrete pointer</summary>
+  <details>
+  <summary>Hint 2 — concrete pointer</summary>
 
-The bucket series is `http_server_requests_seconds_bucket`. The function is `histogram_quantile(q, bucket_rate_expr)` where `q` is between 0 and 1. The inner expression follows the same shape as TICKET-ADV087 but with two changes: target the `_bucket` series, and the `by` clause must include `le` (and any other labels you want to slice by — `uri` is a sensible second). Window of `5m` is a common dashboard choice — wide enough to smooth, narrow enough to react. Set the Grafana axis unit to `s` (seconds) and Grafana will format ms/µs as appropriate.
+  The bucket series is `http_server_requests_seconds_bucket`. The function is `histogram_quantile(q, bucket_rate_expr)` where `q` is between 0 and 1. The inner expression follows the same shape as TICKET-ADV087 but with two changes: target the `_bucket` series, and the `by` clause must include `le` (and any other labels you want to slice by — `uri` is a sensible second). Window of `5m` is a common dashboard choice — wide enough to smooth, narrow enough to react. Set the Grafana axis unit to `s` (seconds) and Grafana will format ms/µs as appropriate.
 
-</details>
+  </details>
 
-<details>
-<summary>Hint 3 — near-solution shape</summary>
+  <details>
+  <summary>Hint 3 — near-solution shape</summary>
 
-Three queries on one panel. Each follows the shape `histogram_quantile(Q, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, uri))` with `Q` of `0.50`, `0.95`, `0.99` respectively. `legendFormat` per query: `P50 {{uri}}`, `P95 {{uri}}`, `P99 {{uri}}`. If a percentile is suspiciously flat-zero, recheck that the bucket series exists in `/actuator/prometheus` — without `publishPercentileHistogram` upstream you cannot get this output (this is why the talking point on TICKET-ADV084 matters: the same lesson applies in reverse to the auto-instrumented HTTP timer, which Spring Boot enables out of the box).
+  Three queries on one panel. Each follows the shape `histogram_quantile(Q, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, uri))` with `Q` of `0.50`, `0.95`, `0.99` respectively. `legendFormat` per query: `P50 {{uri}}`, `P95 {{uri}}`, `P99 {{uri}}`. If a percentile is suspiciously flat-zero, recheck that the bucket series exists in `/actuator/prometheus` — without `publishPercentileHistogram` upstream you cannot get this output (this is why the talking point on TICKET-ADV084 matters: the same lesson applies in reverse to the auto-instrumented HTTP timer, which Spring Boot enables out of the box).
 
-</details>
+  </details>
 
-<details>
-<summary>Hint 4 — step-by-step walkthrough with reference solution</summary>
+  <details>
+  <summary>Hint 4 — step-by-step walkthrough with reference solution</summary>
 
-**Steps:**
+  **Steps:**
 
-1. Confirm `management.metrics.distribution.percentiles-histogram.http.server.requests: true` is set in `application.yml` (already on by default in the trainer copy).
-2. Add a new Grafana "Time series" panel.
-3. Add three query rows A/B/C, each with the histogram_quantile PromQL below (Q = 0.50, 0.95, 0.99).
-4. Set `legendFormat` per query: `P50 {{uri}}`, `P95 {{uri}}`, `P99 {{uri}}`.
-5. Set the panel unit to `s` (seconds) — Grafana renders ms/µs automatically.
-6. Exercise the API; confirm three labelled lines render.
+  1. Confirm `management.metrics.distribution.percentiles-histogram.http.server.requests: true` is set in `application.yml` (already on by default in the trainer copy).
+  2. Add a new Grafana "Time series" panel.
+  3. Add three query rows A/B/C, each with the histogram_quantile PromQL below (Q = 0.50, 0.95, 0.99).
+  4. Set `legendFormat` per query: `P50 {{uri}}`, `P95 {{uri}}`, `P99 {{uri}}`.
+  5. Set the panel unit to `s` (seconds) — Grafana renders ms/µs automatically.
+  6. Exercise the API; confirm three labelled lines render.
 
-**Reference solution** — PromQL (three queries on one panel):
+  **Reference solution** — PromQL (three queries on one panel):
 
-```promql
-histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, uri))
-histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, uri))
-histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, uri))
-```
+  ```promql
+  histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, uri))
+  histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, uri))
+  histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, uri))
+  ```
 
-Legend formats: `P50 {{uri}}`, `P95 {{uri}}`, `P99 {{uri}}`. Unit: `s`.
+  Legend formats: `P50 {{uri}}`, `P95 {{uri}}`, `P99 {{uri}}`. Unit: `s`.
 
-The trainer copy's shipped `reconx-overview.json` currently provisions the P95 line only — extend to P50/P99 either through the Grafana UI or by appending two more `targets` entries to the existing panel block:
+  The trainer copy's shipped `reconx-overview.json` currently provisions the P95 line only — extend to P50/P99 either through the Grafana UI or by appending two more `targets` entries to the existing panel block:
 
-```json
-{
-  "type": "timeseries",
-  "title": "API P95 latency (TICKET-ADV088)",
-  "datasource": { "type": "prometheus", "uid": "reconx-prometheus" },
-  "targets": [
-    { "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, uri))", "legendFormat": "{{uri}}" }
-  ],
-  "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
-}
-```
+  ```json
+  {
+    "type": "timeseries",
+    "title": "API P95 latency (TICKET-ADV088)",
+    "datasource": { "type": "prometheus", "uid": "reconx-prometheus" },
+    "targets": [
+      { "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, uri))", "legendFormat": "{{uri}}" }
+    ],
+    "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
+  }
+  ```
 
-</details>
+  </details>
 
-**▶ Run the project — verify TICKET-ADV088 end-to-end**
+  **▶ Run the project — verify TICKET-ADV088 end-to-end**
 
-Confirm the P50/P95/P99 latency panel renders three labelled lines once the bucket series exist.
+  Confirm the P50/P95/P99 latency panel renders three labelled lines once the bucket series exist.
 
-```bash
-docker compose up -d postgres prometheus grafana
-./mvnw -pl backend spring-boot:run
-for i in $(seq 1 20); do curl -s http://localhost:8080/actuator/health > /dev/null; done
-# open http://localhost:3000 → ReconX Overview → "API response time P50/P95/P99"
-```
+  ```bash
+  docker compose up -d postgres prometheus grafana
+  ./mvnw -pl backend spring-boot:run
+  for i in $(seq 1 20); do curl -s http://localhost:8080/actuator/health > /dev/null; done
+  # open http://localhost:3000 → ReconX Overview → "API response time P50/P95/P99"
+  ```
 
-**Observe:**
+  **Observe:**
 
-- Three labelled lines (P50, P95, P99) render with non-zero values after a bit of traffic.
-- Panel unit is `s` and Grafana auto-formats values into ms or µs.
-- If a percentile line is flat at zero, the `_bucket` series is missing — confirm `management.metrics.distribution.percentiles-histogram.http.server.requests: true` is set.
+  - Three labelled lines (P50, P95, P99) render with non-zero values after a bit of traffic.
+  - Panel unit is `s` and Grafana auto-formats values into ms or µs.
+  - If a percentile line is flat at zero, the `_bucket` series is missing — confirm `management.metrics.distribution.percentiles-histogram.http.server.requests: true` is set.
 
----
+  ---
 
 ### TICKET-ADV089 — Grafana panel: `trade_created_total` over time
 
