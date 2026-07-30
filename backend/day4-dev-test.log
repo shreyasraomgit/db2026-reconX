@@ -1,0 +1,55 @@
+[INFO] Scanning for projects...
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for com.dbtraining.reconx:reconx-common:jar:1.0.0-SNAPSHOT
+[WARNING] 'dependencyManagement.dependencies.dependency.(groupId:artifactId:type:classifier)' must be unique: io.jsonwebtoken:jjwt-api:jar -> duplicate declaration of version ${jjwt.version} @ com.dbtraining.reconx:reconx-parent:1.0.0-SNAPSHOT, C:\Users\Admin\Downloads\Tickets\db2026-reconX\backend\pom.xml, line 121, column 25
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for com.dbtraining.reconx:reconx-parent:pom:1.0.0-SNAPSHOT
+[WARNING] 'dependencyManagement.dependencies.dependency.(groupId:artifactId:type:classifier)' must be unique: io.jsonwebtoken:jjwt-api:jar -> duplicate declaration of version ${jjwt.version} @ line 121, column 25
+[WARNING] 
+[WARNING] It is highly recommended to fix these problems because they threaten the stability of your build.
+[WARNING] 
+[WARNING] For this reason, future Maven versions might no longer support building such malformed projects.
+[WARNING] 
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] ReconX Enterprise Backend                                          [pom]
+[INFO] reconx-common                                                      [jar]
+[INFO] reconx-domain                                                      [jar]
+[INFO] reconx-repository                                                  [jar]
+[INFO] reconx-service                                                     [jar]
+[INFO] reconx-api                                                         [jar]
+[INFO] 
+[INFO] ----------------< com.dbtraining.reconx:reconx-parent >-----------------
+[INFO] Building ReconX Enterprise Backend 1.0.0-SNAPSHOT                  [1/6]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.5.0:run (default-cli) > test-compile @ reconx-parent >>>
+[INFO] 
+[INFO] <<< spring-boot:3.5.0:run (default-cli) < test-compile @ reconx-parent <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.5.0:run (default-cli) @ reconx-parent ---
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for ReconX Enterprise Backend 1.0.0-SNAPSHOT:
+[INFO] 
+[INFO] ReconX Enterprise Backend .......................... FAILURE [  1.947 s]
+[INFO] reconx-common ...................................... SKIPPED
+[INFO] reconx-domain ...................................... SKIPPED
+[INFO] reconx-repository .................................. SKIPPED
+[INFO] reconx-service ..................................... SKIPPED
+[INFO] reconx-api ......................................... SKIPPED
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  5.746 s
+[INFO] Finished at: 2026-07-28T23:36:24-07:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.5.0:run (default-cli) on project reconx-parent: Unable to find a suitable main class, please add a 'mainClass' property -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
