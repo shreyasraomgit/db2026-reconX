@@ -94,7 +94,18 @@ editor. You will see method bodies like:
 
 ```java
 public String generate(String email, String role) {
-    // TODO(TICKET-ADV072): generate a signed HS256 JWT here.
+    public String generate(String email, String role) {
+        Instant now = Instant.now();
+        Instant exp = now.plusSeconds(expirationMinutes * 60);
+        return Jwts.builder()
+                .subject(email)
+                .issuer(issuer)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(exp))
+                .claims(Map.of("role", role))
+                .signWith(key)
+                .compact();
+    }
     throw new UnsupportedOperationException("TICKET-ADV072");
 }
 ```
