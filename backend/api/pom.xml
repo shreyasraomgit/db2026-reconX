@@ -116,6 +116,23 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Caffeine cache (ADV081/082) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+
+        <!-- recon-audit-starter (TICKET-ADV095) -->
+        <dependency>
+            <groupId>com.dbtraining.reconx</groupId>
+            <artifactId>recon-audit-starter</artifactId>
+        </dependency>
+
 
     </dependencies>
 
