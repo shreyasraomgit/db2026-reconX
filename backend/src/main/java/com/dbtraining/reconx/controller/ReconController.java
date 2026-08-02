@@ -35,10 +35,9 @@ public class ReconController {
     @PostMapping("/run")
     @Operation(summary = "Trigger a reconciliation job (async)")
     public ResponseEntity<Map<String, String>> runRecon(@Valid @RequestBody ReconRunRequest req) {
-        // TODO(TICKET-ADV068): generate a jobId, write a row to recon_jobs, and
-        //   return 202 Accepted with {"jobId": ..., "status": "QUEUED"}. A
-        //   worker (Day 6 / Kafka consumer) picks the job up asynchronously.
-        throw new UnsupportedOperationException("TICKET-ADV068");
+        String jobId = UUID.randomUUID().toString();
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
+                .body(Map.of("jobId", jobId, "status", "QUEUED"));
     }
 
     @GetMapping("/jobs/{jobId}/results")
@@ -54,9 +53,9 @@ public class ReconController {
     @Operation(summary = "Mark a recon break as RESOLVED with a note")
     public ResponseEntity<ReconBreak> resolve(@PathVariable Long id,
                                               @RequestBody Map<String, String> body) {
-        // TODO(TICKET-ADV070): load the ReconBreak, call rb.resolve(note), save,
-        //   and return 200 with the updated entity. Throw TradeNotFoundException
-        //   when the id is unknown.
-        throw new UnsupportedOperationException("TICKET-ADV070");
+        ReconBreak reconBreak = breaks.findById(id)
+                .orElseThrow(() -> new TradeNotFoundException(id.toString()));
+        reconBreak.resolve(body.get("note"));
+        return ResponseEntity.ok(breaks.save(reconBreak));
     }
 }

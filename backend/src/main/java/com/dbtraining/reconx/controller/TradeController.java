@@ -62,19 +62,18 @@ public class TradeController {
     @Operation(summary = "Create a trade")
     public ResponseEntity<TradeResponse> create(@Valid @RequestBody TradeRequest req,
                                                 @AuthenticationPrincipal Object principal) {
-        // TODO(TICKET-ADV064): call service.create(req, actor), build a Location
-        //   header at /api/v1/trades/{id}, and return 201 Created with the
-        //   mapped TradeResponse body.
-        throw new UnsupportedOperationException("TICKET-ADV064");
+        String actor = principal == null ? "system" : principal.toString();
+        Trade saved = service.create(req, actor);
+        return ResponseEntity.created(URI.create("/api/v1/trades/" + saved.getId()))
+                .body(mapper.toResponse(saved));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Full update of a trade")
     public TradeResponse update(@PathVariable Long id, @Valid @RequestBody TradeRequest req,
                                 @AuthenticationPrincipal Object principal) {
-        // TODO(TICKET-ADV065): delegate to service.update(id, req, actor) and
-        //   map the updated entity through mapper.toResponse.
-        throw new UnsupportedOperationException("TICKET-ADV065");
+        String actor = principal == null ? "system" : principal.toString();
+        return mapper.toResponse(service.update(id, req, actor));
     }
 
     @PatchMapping("/{id}/status")
@@ -82,16 +81,16 @@ public class TradeController {
     public TradeResponse updateStatus(@PathVariable Long id,
                                       @RequestBody Map<String, String> body,
                                       @AuthenticationPrincipal Object principal) {
-        // TODO(TICKET-ADV066): read body.get("status") and call
-        //   service.updateStatus(id, status, actor). Return mapper.toResponse(saved).
-        throw new UnsupportedOperationException("TICKET-ADV066");
+        String actor = principal == null ? "system" : principal.toString();
+        return mapper.toResponse(service.updateStatus(id, body.get("status"), actor));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Soft delete (sets deleted_at)")
     public ResponseEntity<Void> delete(@PathVariable Long id,
                                        @AuthenticationPrincipal Object principal) {
-        // TODO(TICKET-ADV067): service.softDelete(id, actor); return 204 No Content.
-        throw new UnsupportedOperationException("TICKET-ADV067");
+        String actor = principal == null ? "system" : principal.toString();
+        service.softDelete(id, actor);
+        return ResponseEntity.noContent().build();
     }
 }
