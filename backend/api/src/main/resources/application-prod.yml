@@ -21,6 +21,12 @@ spring:
     hibernate:
       ddl-auto: validate
 
+reconx:
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+      expiration-minutes: ${JWT_EXP_MIN:30}
+      issuer: ${JWT_ISSUER:reconx}
 
 logging:
 

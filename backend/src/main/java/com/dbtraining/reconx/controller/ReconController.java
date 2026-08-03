@@ -1,5 +1,6 @@
 package com.dbtraining.reconx.controller;
 
+import com.dbtraining.reconx.dto.ReconBreakResponse;
 import com.dbtraining.reconx.dto.ReconRunRequest;
 import com.dbtraining.reconx.exception.TradeNotFoundException;
 import com.dbtraining.reconx.repository.ReconBreakRepository;
@@ -42,17 +43,17 @@ public class ReconController {
 
     @GetMapping("/jobs/{jobId}/results")
     @Operation(summary = "Get results for a recon job")
-    public List<ReconBreak> results(@PathVariable String jobId) {
+    public List<ReconBreakResponse> results(@PathVariable String jobId) {
         return Collections.emptyList();
     }
 
     @PutMapping("/results/{id}/resolve")
     @Operation(summary = "Mark a recon break as RESOLVED with a note")
-    public ResponseEntity<ReconBreak> resolve(@PathVariable Long id,
+    public ResponseEntity<ReconBreakResponse> resolve(@PathVariable Long id,
                                               @RequestBody Map<String, String> body) {
         ReconBreak rb = breaks.findById(id)
                 .orElseThrow(() -> new TradeNotFoundException(id.toString()));
         rb.resolve(body.get("note"));
-        return ResponseEntity.ok(breaks.save(rb));
+        return ResponseEntity.ok(ReconBreakResponse.from(breaks.save(rb)));
     }
 }
