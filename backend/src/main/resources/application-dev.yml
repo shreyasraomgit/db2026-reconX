@@ -21,8 +21,10 @@ spring:
     properties:
       hibernate.dialect: org.hibernate.dialect.H2Dialect
 
+  # TICKET-ADV060 — bootstrap-servers deliberately unset under dev so
+  # reconxKafka does not register (see @ConditionalOnProperty on
+  # KafkaHealthIndicator). Spring Kafka still defaults to localhost:9092.
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
     listener:
       missing-topics-fatal: false   # don't blow up if Kafka isn't running locally
 

@@ -2,6 +2,8 @@ package com.dbtraining.reconx.repository.entity;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -9,6 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Objects;
 
 /**
  * ============================================================================
@@ -30,9 +33,12 @@ import java.time.LocalDate;
  * ============================================================================
  */
 @Entity
-@Table(name = "trades")
+@Table(name = "trades", indexes = {
+        @Index(name = "idx_trades_trade_date", columnList = "trade_date"),
+        @Index(name = "idx_trades_status",     columnList = "status")
+})
 @EntityListeners(AuditingEntityListener.class)
-// @org.hibernate.envers.Audited                  // re-enable when envers tables are migrated
+@Audited
 @SQLRestriction("deleted_at IS NULL")
 public class Trade {
 
@@ -45,10 +51,12 @@ public class Trade {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "instrument_id")
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private Instrument instrument;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "counterparty_id")
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private Counterparty counterparty;
 
     @Column(name = "asset_class", nullable = false, length = 20)
@@ -66,8 +74,9 @@ public class Trade {
     @Column(name = "trade_date", nullable = false)
     private LocalDate tradeDate;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String status = "PENDING";
+    private TradeStatus status = TradeStatus.PENDING;
 
     @Column(name = "deleted_at")
     private Instant deletedAt;
@@ -94,7 +103,7 @@ public class Trade {
     public BigDecimal getQuantity()      { return quantity; }
     public BigDecimal getPrice()         { return price; }
     public LocalDate getTradeDate()      { return tradeDate; }
-    public String getStatus()            { return status; }
+    public TradeStatus getStatus()       { return status; }
     public Instant getDeletedAt()        { return deletedAt; }
     public Instant getCreatedAt()        { return createdAt; }
     public Instant getModifiedAt()       { return modifiedAt; }
@@ -107,5 +116,15 @@ public class Trade {
     public void setQuantity(BigDecimal v)     { this.quantity = v; }
     public void setPrice(BigDecimal v)        { this.price = v; }
     public void setTradeDate(LocalDate v)     { this.tradeDate = v; }
-    public void setStatus(String v)           { this.status = v; }
+    public void setStatus(TradeStatus v)      { this.status = v; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Trade other)) return false;
+        return id != null && id.equals(other.id);
+    }
+
+    @Override
+    public int hashCode() { return Objects.hash(id); }
 }

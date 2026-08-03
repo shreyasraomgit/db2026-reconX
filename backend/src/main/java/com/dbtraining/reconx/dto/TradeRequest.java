@@ -37,7 +37,7 @@ public record TradeRequest(
         @NotNull @Positive
         BigDecimal quantity,
 
-        @NotNull @PositiveOrZero
+        @NotNull @Positive
         BigDecimal price,
 
         @NotNull

@@ -45,6 +45,16 @@ public class TradeEventProducer {
     }
 
     public void publish(TradeEvent event) {
-        throw new UnsupportedOperationException("TICKET-ADV129");
+        // GOTCHA (see class javadoc): never let a Kafka publish failure roll
+        // back the DB transaction or fail the request — the trade write has
+        // already committed by the time this runs. Log and move on.
+        try {
+            log.debug("Publishing TradeEvent eventId={} ref={} type={}",
+                      event.eventId(), event.tradeRef(), event.eventType());
+            template.send(TOPIC, event.tradeRef(), event);
+        } catch (Exception ex) {
+            log.warn("Failed to publish TradeEvent ref={} type={}: {}",
+                      event.tradeRef(), event.eventType(), ex.getMessage());
+        }
     }
 }
