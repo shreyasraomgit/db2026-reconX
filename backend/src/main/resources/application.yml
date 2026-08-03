@@ -67,7 +67,7 @@ spring:
         spring.json.value.default.type: com.dbtraining.reconx.dto.TradeEvent
 
 server:
-  port: 8081
+  port: 8080
   servlet:
     context-path: /api
 
