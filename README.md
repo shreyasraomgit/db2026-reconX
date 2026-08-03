@@ -129,7 +129,7 @@ docker compose up -d postgres kafka zookeeper prometheus grafana kafdrop
 
 # 2. Run the backend (Liquibase runs migrations automatically on startup)
 cd backend
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+./mvnw -pl api spring-boot:run -Dspring-boot.run.profiles=dev
 
 # 3. Run the frontend
 cd ../frontend
@@ -137,12 +137,12 @@ npm install
 npm run dev
 
 # 4. Open
-# - Swagger UI:      http://localhost:8080/swagger-ui.html
+# - Swagger UI:      http://localhost:8080/api/swagger-ui.html
 # - Frontend:        http://localhost:5173
 # - Prometheus:      http://localhost:9090
 # - Grafana:         http://localhost:3000   (admin / admin)
 # - Kafdrop:         http://localhost:9000
-# - Actuator health: http://localhost:8080/actuator/health
+# - Actuator health: http://localhost:8080/api/actuator/health
 ```
 
 ### Default credentials (dev profile only, after you implement Day 5)

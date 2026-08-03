@@ -1,5 +1,9 @@
 spring:
 
+  # TICKET-ADV060 — no default: prod must fail fast if Kafka isn't configured.
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+
   datasource:
 
     url: ${RECONX_DB_URL}
@@ -17,6 +21,12 @@ spring:
     hibernate:
       ddl-auto: validate
 
+reconx:
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+      expiration-minutes: ${JWT_EXP_MIN:30}
+      issuer: ${JWT_ISSUER:reconx}
 
 logging:
 

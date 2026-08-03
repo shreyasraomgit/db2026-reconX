@@ -48,6 +48,12 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- TICKET-ADV097 — Prometheus scrape endpoint -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
 
         <!-- Swagger -->
         <dependency>
@@ -133,6 +139,11 @@
             <artifactId>recon-audit-starter</artifactId>
         </dependency>
 
+        <!-- Hibernate Envers (TICKET-ADV052) -->
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-envers</artifactId>
+        </dependency>
 
     </dependencies>
 
