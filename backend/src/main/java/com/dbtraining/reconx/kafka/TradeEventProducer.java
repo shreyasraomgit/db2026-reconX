@@ -37,19 +37,27 @@ public class TradeEventProducer {
     }
 
     public void publish(TradeEvent event) {
-        log.debug("Publishing TradeEvent eventId={} ref={} type={}",
-                event.eventId(), event.tradeRef(), event.eventType());
-        template.send(TOPIC, event.tradeRef(), event)
-                .whenComplete((result, ex) -> {
-                    if (ex != null) {
-                        log.error("Failed to publish TradeEvent eventId={} ref={}: {}",
-                                event.eventId(), event.tradeRef(), ex.getMessage(), ex);
-                    } else if (log.isDebugEnabled()) {
-                        log.debug("Published TradeEvent eventId={} to partition={} offset={}",
-                                event.eventId(),
-                                result.getRecordMetadata().partition(),
-                                result.getRecordMetadata().offset());
-                    }
-                });
+        // GOTCHA (see class javadoc): never let a Kafka publish failure roll
+        // back the DB transaction or fail the request.
+        try {
+            log.debug("Publishing TradeEvent eventId={} ref={} type={}",
+                    event.eventId(), event.tradeRef(), event.eventType());
+
+            template.send(TOPIC, event.tradeRef(), event)
+                    .whenComplete((result, ex) -> {
+                        if (ex != null) {
+                            log.error("Failed to publish TradeEvent eventId={} ref={}: {}",
+                                    event.eventId(), event.tradeRef(), ex.getMessage(), ex);
+                        } else if (log.isDebugEnabled()) {
+                            log.debug("Published TradeEvent eventId={} to partition={} offset={}",
+                                    event.eventId(),
+                                    result.getRecordMetadata().partition(),
+                                    result.getRecordMetadata().offset());
+                        }
+                    });
+        } catch (Exception ex) {
+            log.warn("Failed to publish TradeEvent ref={} type={}: {}",
+                    event.tradeRef(), event.eventType(), ex.getMessage());
+        }
     }
 }

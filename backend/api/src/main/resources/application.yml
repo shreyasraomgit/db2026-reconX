@@ -24,6 +24,29 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
 
+  # TICKET-ADV129 — Kafka producer defaults. bootstrap-servers is
+  # deliberately NOT set here (see application-dev.yml comment on
+  # KafkaHealthIndicator's @ConditionalOnProperty gate); Spring Kafka
+  # falls back to its own localhost:9092 default for the factories below.
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+        # Fail fast instead of blocking the request thread for the 60s
+        # default when no broker is reachable.
+        max.block.ms: 3000
+    consumer:
+      group-id: reconx-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.dbtraining.reconx.dto
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: com.dbtraining.reconx.dto.TradeEvent
+
 
 management:
   endpoints:

@@ -1,5 +1,10 @@
 spring:
 
+  # TICKET-ADV060 — explicit here (safe local default) so reconxKafka
+  # registers under uat, per @ConditionalOnProperty on KafkaHealthIndicator.
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
   datasource:
     url: jdbc:postgresql://localhost:5432/reconx_uat
     username: reconx_uat
@@ -14,6 +19,12 @@ spring:
     hibernate:
       ddl-auto: validate
 
+reconx:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:uat-secret-change-me-32-bytes-min!!}
+      expiration-minutes: ${JWT_EXP_MIN:60}
+      issuer: reconx
 
 logging:
 

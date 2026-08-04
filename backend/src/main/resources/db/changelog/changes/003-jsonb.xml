@@ -30,4 +30,19 @@
         </rollback>
     </changeSet>
 
+    <!-- TICKET-ADV051 — H2 (dev) fallback: H2 2.x has a native JSON column
+         type, and Hibernate's JSON SqlTypeDescriptor (what JsonBinaryType
+         resolves to) maps cleanly onto it — unlike CLOB, which fails
+         schema validation because Hibernate expects Types#OTHER, not
+         Types#CLOB, for a JsonBinaryType-mapped column. -->
+    <changeSet id="003-jsonb-on-instruments-h2" author="trainer">
+        <preConditions onFail="MARK_RAN">
+            <not><dbms type="postgresql"/></not>
+        </preConditions>
+        <sql>ALTER TABLE instruments ADD COLUMN metadata JSON DEFAULT JSON '{}' NOT NULL;</sql>
+        <rollback>
+            <sql>ALTER TABLE instruments DROP COLUMN metadata;</sql>
+        </rollback>
+    </changeSet>
+
 </databaseChangeLog>

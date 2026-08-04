@@ -2,6 +2,10 @@
 # TICKET-ADV049 — uat profile: PostgreSQL on docker-compose
 # =============================================================================
 spring:
+  # TICKET-ADV060 — explicitly configured here (with a safe local default)
+  # so reconxKafka registers under uat.
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:reconx}
     username: ${POSTGRES_USER:reconx_user}

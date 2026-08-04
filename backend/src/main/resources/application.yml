@@ -45,8 +45,12 @@ spring:
 
   # ADV128 — Kafka producer/consumer defaults. Topics are created at startup
   # by KafkaTopicsConfig (see com.dbtraining.reconx.kafka.KafkaTopicsConfig).
+  # TICKET-ADV060 — no default here on purpose: spring.kafka.bootstrap-servers
+  # must be ABSENT unless a profile explicitly sets it, so
+  # KafkaHealthIndicator's @ConditionalOnProperty gate actually gates.
+  # Spring Kafka's own autoconfiguration still defaults to localhost:9092 for
+  # the producer/consumer factories below when this key is unset.
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -63,7 +67,7 @@ spring:
         spring.json.value.default.type: com.dbtraining.reconx.dto.TradeEvent
 
 server:
-  port: 8081
+  port: 8080
   servlet:
     context-path: /api
 
