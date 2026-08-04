@@ -38,6 +38,11 @@ public class SecurityConfig {
                         "/swagger-ui.html", "/swagger-ui/**",
                         "/v3/api-docs/**",
                         "/h2/**").permitAll()
+                // TICKET-ADV104 backend counterpart — native browser EventSource cannot
+                // set an Authorization header, and neither the Day 7 static-dashboard
+                // nor the Day 8-9 React useTradeStream hook ever wires one, so this
+                // read-only broadcast endpoint is intentionally public like actuator/swagger.
+                .requestMatchers(HttpMethod.GET, "/v1/trades/stream").permitAll()
                 .requestMatchers(HttpMethod.GET,    "/v1/trades/**").hasAnyRole("VIEWER", "TRADER", "RECON_ANALYST", "ADMIN")
                 .requestMatchers(HttpMethod.POST,   "/v1/trades").hasAnyRole("TRADER", "ADMIN")
                 .requestMatchers(HttpMethod.PUT,    "/v1/trades/**").hasAnyRole("TRADER", "ADMIN")
