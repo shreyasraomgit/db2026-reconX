@@ -37,6 +37,15 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
+    @ExceptionHandler(ReconJobNotFoundException.class)
+    public ProblemDetail reconJobNotFound(ReconJobNotFoundException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        pd.setType(URI.create(ERRORS_BASE + "recon-job-not-found"));
+        pd.setTitle("Recon job not found");
+        pd.setProperty("timestamp", Instant.now());
+        return pd;
+    }
+
     @ExceptionHandler(DuplicateTradeRefException.class)
     public ProblemDetail duplicate(DuplicateTradeRefException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());

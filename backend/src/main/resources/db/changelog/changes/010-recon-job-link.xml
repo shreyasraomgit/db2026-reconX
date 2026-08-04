@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ============================================================================
+ TICKET-ADV069 (fix) — recon_breaks.job_id links a break to the job that
+                        detected it, so GET /v1/recon/jobs/{jobId}/results
+                        can scope results to a single job instead of
+                        returning every open break regardless of jobId.
+ ============================================================================
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="010-recon-breaks-add-job-id" author="trainer">
+        <addColumn tableName="recon_breaks">
+            <column name="job_id" type="BIGINT"/>
+        </addColumn>
+        <createIndex tableName="recon_breaks" indexName="idx_recon_breaks_job_id">
+            <column name="job_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseTableName="recon_breaks" baseColumnNames="job_id"
+                                 constraintName="fk_recon_breaks_job"
+                                 referencedTableName="recon_jobs" referencedColumnNames="id"/>
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="recon_breaks" constraintName="fk_recon_breaks_job"/>
+            <dropColumn tableName="recon_breaks" columnName="job_id"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
