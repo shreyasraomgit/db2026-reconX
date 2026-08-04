@@ -42,7 +42,12 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      # Disabled: KafkaTopicsConfig explicitly declares all 4 topics with their
+      # correct partition counts on backend startup. Leaving auto-create on
+      # races the broker's default 1-partition auto-create against that
+      # explicit declaration, leaving early consumers assigned zero
+      # partitions until the next metadata refresh.
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
     healthcheck:
       test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list || exit 1"]
       interval: 10s
@@ -52,7 +57,7 @@ services:
 
   backend:
     build: ./backend
-    image: ghcr.io/sidoncode/reconx-backend:latest
+    image: ghcr.io/shreyasraomgit/reconx-backend:latest
     container_name: reconx-backend
     depends_on:
       postgres: {condition: service_healthy}
@@ -65,7 +70,7 @@ services:
       POSTGRES_DB:   reconx
       POSTGRES_USER: reconx_user
       POSTGRES_PASSWORD: reconx_pass
-      KAFKA_BOOTSTRAP: kafka:29092
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me-32-bytes-min!!}
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/api/actuator/health"]
@@ -76,7 +81,7 @@ services:
 
   frontend:
     build: ./frontend
-    image: ghcr.io/sidoncode/reconx-frontend:latest
+    image: ghcr.io/shreyasraomgit/reconx-frontend:latest
     container_name: reconx-frontend
     depends_on:
       backend: {condition: service_healthy}

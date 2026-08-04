@@ -120,7 +120,12 @@ logging:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
-    tagsSorter: alpha
+    # No tagsSorter: leaving it unset means Swagger UI keeps the explicit
+    # tag order declared in OpenApiConfig (auth -> trades -> recon -> audit)
+    # instead of alphabetising and burying the "log in first" step.
     operationsSorter: alpha
+    urls-primary-name: all   # dropdown defaults to the "all" group, not "admin"
+    tryItOutEnabled: true    # every operation opens ready to fill in, no extra click
+    persistAuthorization: true  # the JWT you paste into Authorize survives a page refresh
   api-docs:
     path: /v3/api-docs

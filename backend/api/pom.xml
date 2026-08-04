@@ -48,6 +48,13 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- TICKET-ADV084 — required for @Timed/TimedAspect auto-configuration
+             (reconciliation_duration_seconds histogram) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
         <!-- TICKET-ADV097 — Prometheus scrape endpoint -->
         <dependency>
             <groupId>io.micrometer</groupId>
@@ -251,6 +258,65 @@
 
                 </configuration>
 
+            </plugin>
+
+
+            <!-- TICKET-ADV155 — Liquibase validate (CI runs this against the
+                 ephemeral Postgres service container before tests, via
+                 -Dliquibase.url/username/password) -->
+            <plugin>
+                <groupId>org.liquibase</groupId>
+                <artifactId>liquibase-maven-plugin</artifactId>
+                <version>4.31.1</version>
+                <configuration>
+                    <changeLogFile>db/changelog/db.changelog-master.xml</changeLogFile>
+                    <searchPath>${project.basedir}/../src/main/resources</searchPath>
+                </configuration>
+            </plugin>
+
+            <!-- TICKET-ADV156 — JaCoCo coverage report (gate enforced in CI,
+                 which parses target/site/jacoco/jacoco.csv) -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- TICKET-ADV157 — Checkstyle: fails the build on warning-level
+                 violations, bound to validate so style regressions block
+                 before compile/test even run -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <configLocation>${maven.multiModuleProjectDirectory}/checkstyle.xml</configLocation>
+                    <failOnViolation>true</failOnViolation>
+                    <violationSeverity>warning</violationSeverity>
+                    <consoleOutput>true</consoleOutput>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
 

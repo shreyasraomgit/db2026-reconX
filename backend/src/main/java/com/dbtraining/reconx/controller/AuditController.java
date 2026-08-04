@@ -15,7 +15,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/v1/audit")
-@Tag(name = "audit")
+@Tag(name = "audit", description = "Immutable change history, sourced from Kafka events (recon-analyst/admin only)")
 @SecurityRequirement(name = "bearerAuth")
 public class AuditController {
 

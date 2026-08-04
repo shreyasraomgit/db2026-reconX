@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/auth")
-@Tag(name = "auth")
+@Tag(name = "auth", description = "Start here — log in to get a JWT, then click Authorize (top right) and paste it in")
 public class AuthController {
 
     private final AppUserRepository users;

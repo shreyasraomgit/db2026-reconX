@@ -1,0 +1,159 @@
+# ============================================================================
+# TICKET-ADV154 — Multi-stage GitHub Actions pipeline
+# TICKET-ADV155 — Liquibase validate step (fails fast before tests run)
+# TICKET-ADV156 — JaCoCo coverage gate (parses jacoco.csv, threshold below)
+# TICKET-ADV157 — Checkstyle (bound to `validate` phase in backend/api/pom.xml,
+#                 so it runs automatically as part of every Maven goal here)
+#
+# The backend is a Maven reactor (common/domain/repository/service/api +
+# recon-audit-starter) where `api` pulls in the actual application source
+# from the sibling backend/src tree via build-helper-maven-plugin. All Maven
+# goals below therefore run with `-pl api -am` so the reactor builds in the
+# right order and the coverage/liquibase artifacts land in backend/api/target.
+# ============================================================================
+name: ci
+
+on:
+  push:
+    branches: [main, develop, "feature/**"]
+    tags: ["v*"]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  IMAGE_REGISTRY: ghcr.io
+  IMAGE_NAMESPACE: ${{ github.repository_owner }}
+
+jobs:
+
+  backend-build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: reconx
+          POSTGRES_USER: reconx_user
+          POSTGRES_PASSWORD: reconx_pass
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U reconx_user -d reconx"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: maven
+          cache-dependency-path: backend/**/pom.xml
+
+      - name: Liquibase validate
+        working-directory: backend
+        run: |
+          ./mvnw -B liquibase:validate -pl api \
+            -Dliquibase.url="jdbc:postgresql://localhost:5432/reconx" \
+            -Dliquibase.username=reconx_user \
+            -Dliquibase.password=reconx_pass
+
+      - name: Build + test (Checkstyle runs on validate, JaCoCo on test)
+        working-directory: backend
+        run: ./mvnw -B verify -pl api -am
+
+      - name: Coverage gate
+        working-directory: backend
+        env:
+          # Trainer-copy baseline. Raise this as real test coverage climbs —
+          # don't ship a green CI by softening the bar instead.
+          MIN_COVERAGE: "10"
+        run: |
+          COVERAGE=$(awk -F',' 'NR>1 { covered+=$5; missed+=$4 } END { print covered / (covered + missed) * 100 }' api/target/site/jacoco/jacoco.csv 2>/dev/null || echo "0")
+          echo "Line coverage: $COVERAGE%"
+          awk -v cov="$COVERAGE" -v min="$MIN_COVERAGE" 'BEGIN { exit (cov >= min) ? 0 : 1 }'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: backend/api/target/site/jacoco
+
+  frontend-build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint --if-present
+      - name: Test
+        working-directory: frontend
+        run: npm test --if-present
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+
+  docker-and-push:
+    needs: [backend-build-and-test, frontend-build-and-test]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.IMAGE_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Metadata (backend)
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/reconx-backend
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=long
+            type=ref,event=tag
+
+      - name: Build + push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Metadata (frontend)
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/reconx-frontend
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=long
+            type=ref,event=tag
+
+      - name: Build + push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

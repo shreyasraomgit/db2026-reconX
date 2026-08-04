@@ -7,6 +7,8 @@ import com.dbtraining.reconx.repository.entity.TradeStatus;
 import com.dbtraining.reconx.service.TradeService;
 import com.dbtraining.reconx.service.TradeStreamService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -85,9 +87,13 @@ public class TradeController {
     }
 
     @PatchMapping("/{id}/status")
-    @Operation(summary = "Update only the status field")
+    @Operation(summary = "Update only the status field",
+            description = "Valid values: PENDING, MATCHED, UNMATCHED, DISPUTED, CANCELLED")
     public TradeResponse updateStatus(@PathVariable Long id,
-                                      @RequestBody Map<String, String> body,
+                                      @RequestBody
+                                      @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                                              content = @Content(examples = @ExampleObject(value = "{\"status\": \"MATCHED\"}")))
+                                      Map<String, String> body,
                                       @AuthenticationPrincipal String actor) {
         return service.updateStatus(id, body.get("status"), actor);
     }

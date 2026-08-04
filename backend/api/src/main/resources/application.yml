@@ -66,3 +66,19 @@ server:
 
   servlet:
     context-path: /api
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    # A custom tag order (auth -> trades -> recon -> audit) declared in
+    # OpenApiConfig is NOT honored by springdoc's auto-discovered
+    # GroupedOpenApi groups, so tagsSorter: alpha is the only reliably
+    # deterministic option — the intro banner tells people to open "auth"
+    # first regardless of where it lands alphabetically.
+    tagsSorter: alpha
+    operationsSorter: alpha
+    urls-primary-name: all   # dropdown defaults to the "all" group, not "admin"
+    tryItOutEnabled: true    # every operation opens ready to fill in, no extra click
+    persistAuthorization: true  # the JWT you paste into Authorize survives a page refresh
+  api-docs:
+    path: /v3/api-docs

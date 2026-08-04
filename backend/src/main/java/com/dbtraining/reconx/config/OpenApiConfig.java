@@ -6,9 +6,12 @@ import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.tags.Tag;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 /**
  * ============================================================================
@@ -55,14 +58,42 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("ReconX API")
                         .version("v1")
-                        .description("Enterprise Trade Reconciliation Platform (Advanced Track)")
+                        .description("""
+                                Enterprise Trade Reconciliation Platform (Advanced Track).
+
+                                **Getting started:** open the `auth` section below, run \
+                                POST /auth/login with a seeded user (e.g. trader@db.com / \
+                                trader123), copy the `token` from the response, then click \
+                                the green **Authorize** button at the top of this page and \
+                                paste it in. Every other endpoint needs that.""")
                         .contact(new Contact().name("DB TDI Training").email("tdi@db.com")))
                 .components(new Components().addSecuritySchemes("bearerAuth",
                         new SecurityScheme()
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
                                 .bearerFormat("JWT")))
-                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"));
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+                // Supplies the per-tag descriptions shown under each section heading
+                // in Swagger UI. Does NOT control section order — springdoc's
+                // auto-discovered GroupedOpenApi groups render tags alphabetically
+                // regardless of this list's order (see tagsSorter in application.yml).
+                .tags(List.of(
+                        new Tag().name("auth").description("Step 1 — log in to get a JWT"),
+                        new Tag().name("trades").description("Step 2 — create/list/update trades"),
+                        new Tag().name("recon").description("Reconciliation runs and break resolution"),
+                        new Tag().name("audit").description("Read-only change history")));
+    }
+
+    // "all" is the default selected group (see springdoc.swagger-ui.urls-primary-name
+    // in application.yml) — every controller (auth, trades, recon, audit) in one
+    // place. "public" and "admin" stay as narrower views for teams that only care
+    // about one slice of the API.
+    @Bean
+    public GroupedOpenApi allApi() {
+        return GroupedOpenApi.builder()
+                .group("all")
+                .pathsToMatch("/**")
+                .build();
     }
 
     @Bean
@@ -77,7 +108,7 @@ public class OpenApiConfig {
     public GroupedOpenApi adminApi() {
         return GroupedOpenApi.builder()
                 .group("admin")
-                .pathsToMatch("/v1/admin/**", "/actuator/**")
+                .pathsToMatch("/v1/admin/**", "/auth/**", "/v1/audit/**", "/actuator/**")
                 .build();
     }
 }
