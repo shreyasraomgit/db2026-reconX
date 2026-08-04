@@ -6,9 +6,9 @@ spring:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/reconx_uat
-    username: reconx_uat
-    password: reconx_uat
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:reconx}
+    username: ${POSTGRES_USER:reconx_user}
+    password: ${POSTGRES_PASSWORD:reconx_pass}
 
 
   jpa:

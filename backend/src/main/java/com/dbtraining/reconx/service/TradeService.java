@@ -55,19 +55,22 @@ public class TradeService {
     private final TradeEventProducer events;
     private final TradeMetrics metrics;
     private final TradeMapper mapper;
+    private final TradeStreamService stream;
 
     public TradeService(TradeRepository tradeRepo,
                         CounterpartyRepository cpRepo,
                         InstrumentRepository instRepo,
                         TradeEventProducer events,
                         TradeMetrics metrics,
-                        TradeMapper mapper) {
+                        TradeMapper mapper,
+                        TradeStreamService stream) {
         this.tradeRepo = tradeRepo;
         this.cpRepo = cpRepo;
         this.instRepo = instRepo;
         this.events = events;
         this.metrics = metrics;
         this.mapper = mapper;
+        this.stream = stream;
     }
 
     public TradeResponse create(TradeRequest req, String actor) {
@@ -96,7 +99,9 @@ public class TradeService {
         events.publish(new TradeEvent(UUID.randomUUID(), saved.getTradeRef(),
                 TradeEvent.EventType.TRADE_CREATED, Instant.now(), actor,
                 null, "status=PENDING"));
-        return mapper.toResponse(saved);
+        TradeResponse response = mapper.toResponse(saved);
+        stream.broadcast(response);
+        return response;
     }
 
     public TradeResponse update(Long id, TradeRequest req, String actor) {
@@ -114,7 +119,9 @@ public class TradeService {
         events.publish(new TradeEvent(UUID.randomUUID(), saved.getTradeRef(),
                 TradeEvent.EventType.TRADE_UPDATED, Instant.now(), actor,
                 before, "qty=" + saved.getQuantity() + ",price=" + saved.getPrice()));
-        return mapper.toResponse(saved);
+        TradeResponse response = mapper.toResponse(saved);
+        stream.broadcast(response);
+        return response;
     }
 
     public TradeResponse updateStatus(Long id, String status, String actor) {
@@ -133,7 +140,9 @@ public class TradeService {
         events.publish(new TradeEvent(UUID.randomUUID(), saved.getTradeRef(),
                 TradeEvent.EventType.TRADE_UPDATED, Instant.now(), actor,
                 before, "status=" + newStatus));
-        return mapper.toResponse(saved);
+        TradeResponse response = mapper.toResponse(saved);
+        stream.broadcast(response);
+        return response;
     }
 
     public void softDelete(Long id, String actor) {

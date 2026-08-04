@@ -1,0 +1,85 @@
+<!doctype html>
+<!--
+============================================================================
+Recon — fills the "Recon" nav link (dashboard.html / trades.html) that had
+no matching page. Reuses the existing Day 5 endpoints as-is, no new
+backend surface: POST /v1/recon/run, GET /v1/recon/jobs/{jobId}/results,
+PUT /v1/recon/results/{id}/resolve.
+============================================================================
+-->
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <title>ReconX (static) — Recon</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>
+    (function () {
+      var saved = localStorage.getItem('reconx-theme') || 'light';
+      document.documentElement.dataset.theme = saved;
+    })();
+  </script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="layout__header" role="banner">
+    <h1 class="layout__title">ReconX</h1>
+    <nav class="layout__nav" aria-label="Main navigation">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="trades.html">Trades</a>
+      <a href="recon.html" aria-current="page">Recon</a>
+    </nav>
+    <button id="theme-toggle" aria-label="Toggle light/dark theme">&#127767;</button>
+  </header>
+
+  <aside class="layout__sidebar" role="complementary">
+    <h2>About</h2>
+    <ul>
+      <li>Trigger a recon run for a date range</li>
+      <li>Review breaks for that job</li>
+      <li>Resolve a break with a note</li>
+    </ul>
+  </aside>
+
+  <main class="layout__main" role="main">
+    <section aria-labelledby="run-heading">
+      <h2 id="run-heading">Run reconciliation</h2>
+      <form id="recon-run-form">
+        <label>From <input type="date" id="from-date" required /></label>
+        <label>To <input type="date" id="to-date" required /></label>
+        <button type="submit">Run recon</button>
+      </form>
+      <p id="run-status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section aria-labelledby="results-heading">
+      <h2 id="results-heading">Job results</h2>
+      <div class="table-scroll">
+        <table class="data-table" id="recon-table">
+          <thead>
+            <tr>
+              <th>Break ID</th>
+              <th>Trade ID</th>
+              <th>Discrepancy</th>
+              <th>Status</th>
+              <th>Detected</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="recon-tbody">
+            <tr>
+              <td colspan="6" style="text-align:center;padding:2rem;opacity:0.5">Run a recon job above to see results.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="layout__footer" role="contentinfo">
+    <small>ReconX TDI 2026 &middot; static dashboard (Day 7)</small>
+  </footer>
+
+  <script src="js/theme.js"></script>
+  <script src="js/recon.js"></script>
+</body>
+</html>

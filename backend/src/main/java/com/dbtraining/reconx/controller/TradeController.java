@@ -5,6 +5,7 @@ import com.dbtraining.reconx.dto.TradeRequest;
 import com.dbtraining.reconx.dto.TradeResponse;
 import com.dbtraining.reconx.repository.entity.TradeStatus;
 import com.dbtraining.reconx.service.TradeService;
+import com.dbtraining.reconx.service.TradeStreamService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,9 +13,11 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.net.URI;
 import java.time.LocalDate;
@@ -40,9 +43,17 @@ import java.util.Map;
 public class TradeController {
 
     private final TradeService service;
+    private final TradeStreamService stream;
 
-    public TradeController(TradeService service) {
+    public TradeController(TradeService service, TradeStreamService stream) {
         this.service = service;
+        this.stream = stream;
+    }
+
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "Live SSE feed of trade create/update events")
+    public SseEmitter stream() {
+        return stream.subscribe();
     }
 
     @GetMapping

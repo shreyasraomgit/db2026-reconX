@@ -35,6 +35,36 @@
         </rollback>
     </changeSet>
 
+    <!--
+     TICKET-ADV052 follow-up — Postgres hides IDENTITY-owned sequences from
+     information_schema.sequences (SQL-standard behaviour), so Hibernate
+     Envers' SEQUENCE-strategy revinfo generator fails schema validation
+     ("missing sequence [revinfo_seq]") even though the identity column
+     works fine functionally. H2 (dev) is unaffected, hence dbms="postgresql".
+     Fix: give revinfo.rev a real standalone sequence Hibernate can see.
+     incrementBy=50 matches Hibernate's SequenceStyleGenerator default
+     allocationSize — a mismatched increment fails with a MappingException
+     at boot ("increment size ... set to [50] ... database ... is [1]").
+    -->
+    <changeSet id="009-fix-revinfo-sequence-postgres" author="trainer" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sequenceExists sequenceName="revinfo_seq"/>
+            </not>
+        </preConditions>
+        <createSequence sequenceName="revinfo_seq" startValue="1" incrementBy="50"/>
+        <sql>
+            ALTER TABLE revinfo ALTER COLUMN rev DROP IDENTITY IF EXISTS;
+            ALTER TABLE revinfo ALTER COLUMN rev SET DEFAULT nextval('revinfo_seq');
+            ALTER SEQUENCE revinfo_seq OWNED BY revinfo.rev;
+            SELECT setval('revinfo_seq', COALESCE((SELECT MAX(rev) FROM revinfo), 0) + 1, false);
+        </sql>
+        <rollback>
+            <sql>ALTER TABLE revinfo ALTER COLUMN rev DROP DEFAULT;</sql>
+            <dropSequence sequenceName="revinfo_seq"/>
+        </rollback>
+    </changeSet>
+
     <changeSet id="009-create-trades-aud" author="trainer">
         <createTable tableName="trades_aud">
             <column name="id" type="BIGINT"><constraints nullable="false"/></column>
