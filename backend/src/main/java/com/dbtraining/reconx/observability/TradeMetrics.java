@@ -9,7 +9,9 @@ import org.springframework.stereotype.Component;
 
 /**
  * ============================================================================
- * TICKET-ADV083 — trade_created_total Counter
+ * TICKET-ADV083 — trade_creation_total Counter (named "trade_creation", not
+ *                  "trade_created" — Micrometer's Prometheus exporter (1.13+)
+ *                  strips "_created" as a reserved OpenMetrics suffix)
  * TICKET-ADV085 — recon_break_count Gauge (polled — wraps repo.countByStatus)
  * TICKET-ADV086 — trade_value_total DistributionSummary
  *
@@ -38,7 +40,7 @@ public class TradeMetrics {
     private final DistributionSummary tradeValue;
 
     public TradeMetrics(MeterRegistry registry, ReconBreakRepository breakRepo) {
-        this.tradeCreated = Counter.builder("trade_created_total")
+        this.tradeCreated = Counter.builder("trade_creation")
                 .description("Total trades created")
                 .register(registry);
 

@@ -13,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -44,7 +43,9 @@ public class ReconController {
     @GetMapping("/jobs/{jobId}/results")
     @Operation(summary = "Get results for a recon job")
     public List<ReconBreakResponse> results(@PathVariable String jobId) {
-        return Collections.emptyList();
+        // TICKET-ADV069 reference solution — trainer-stub returns all current
+        // open breaks regardless of jobId (no per-job persistence yet).
+        return breaks.findAll().stream().map(ReconBreakResponse::from).toList();
     }
 
     @PutMapping("/results/{id}/resolve")
